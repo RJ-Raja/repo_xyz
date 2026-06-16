@@ -1,5 +1,6 @@
-import { createContext, useEffect, useMemo, useState } from 'react'
-import { STORAGE_KEYS } from '../utils/storage'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { authService } from '../services/authService'
+import { tokenStorage } from '../utils/tokenStorage'
 
 export const AuthContext = createContext(null)
 
@@ -8,30 +9,35 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const storedUser = localStorage.getItem(STORAGE_KEYS.USER)
+    const storedUser = tokenStorage.getUser()
 
     if (storedUser) {
-      setUser(JSON.parse(storedUser))
+      setUser(storedUser)
     }
 
     setIsLoading(false)
   }, [])
 
-  const login = (userData, token) => {
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData))
-
+  const login = useCallback((userData, token) => {
     if (token) {
-      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token)
+      tokenStorage.setToken(token)
     }
 
+    tokenStorage.setUser(userData)
     setUser(userData)
-  }
+  }, [])
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.USER)
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
+  const logout = useCallback(() => {
+    tokenStorage.clear()
     setUser(null)
-  }
+  }, [])
+
+  const refreshProfile = useCallback(async () => {
+    const response = await authService.profile()
+    tokenStorage.setUser(response.user)
+    setUser(response.user)
+    return response.user
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -40,8 +46,9 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated: Boolean(user),
       login,
       logout,
+      refreshProfile,
     }),
-    [user, isLoading],
+    [user, isLoading, login, logout, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

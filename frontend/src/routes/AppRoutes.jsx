@@ -5,6 +5,8 @@ import Home from '../pages/Home'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
 import Register from '../pages/Register'
+import VerifyLoginOtp from '../pages/VerifyLoginOtp'
+import VerifyRegisterOtp from '../pages/VerifyRegisterOtp'
 import ProtectedRoute from './ProtectedRoute'
 import { ROUTES } from '../constants/routes'
 
@@ -16,6 +18,8 @@ const AppRoutes = () => {
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.LOGIN} element={<Login />} />
           <Route path={ROUTES.REGISTER} element={<Register />} />
+          <Route path={ROUTES.VERIFY_REGISTER_OTP} element={<VerifyRegisterOtp />} />
+          <Route path={ROUTES.VERIFY_LOGIN_OTP} element={<VerifyLoginOtp />} />
           <Route element={<ProtectedRoute />}>
             <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           </Route>

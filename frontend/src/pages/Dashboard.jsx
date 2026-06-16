@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { formatDate } from '../utils/formatDate'
 import { useAuth } from '../hooks/useAuth'
 
@@ -8,17 +10,34 @@ const stats = [
 ]
 
 const Dashboard = () => {
-  const { user } = useAuth()
+  const { refreshProfile, user } = useAuth()
+  const [profile, setProfile] = useState(user)
+  const [isProfileLoading, setIsProfileLoading] = useState(true)
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const currentUser = await refreshProfile()
+        setProfile(currentUser)
+      } catch {
+        toast.error('Unable to load profile')
+      } finally {
+        setIsProfileLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [refreshProfile])
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
         <p className="text-sm text-slate-500">{formatDate(new Date())}</p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-950">
-          Welcome, {user?.name || 'User'}
+          Welcome, {profile?.name || user?.name || 'User'}
         </h1>
         <p className="mt-2 text-slate-600">
-          This protected dashboard is ready for real API-backed data.
+          This dashboard is protected by JWT and loaded from your profile API.
         </p>
       </div>
 
@@ -32,11 +51,31 @@ const Dashboard = () => {
       </div>
 
       <div className="mt-6 rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-950">API service layer</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Use the configured Axios client in <code>src/services/apiClient.js</code> and add
-          resource-specific modules beside it as the backend grows.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-950">Profile</h2>
+        {isProfileLoading ? (
+          <p className="mt-2 text-sm text-slate-600">Loading profile...</p>
+        ) : (
+          <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="font-medium text-slate-500">Name</dt>
+              <dd className="mt-1 text-slate-950">{profile?.name}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-slate-500">Email</dt>
+              <dd className="mt-1 text-slate-950">{profile?.email}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-slate-500">Email verified</dt>
+              <dd className="mt-1 text-slate-950">{profile?.isEmailVerified ? 'Yes' : 'No'}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-slate-500">Joined</dt>
+              <dd className="mt-1 text-slate-950">
+                {profile?.createdAt ? formatDate(profile.createdAt) : 'Not available'}
+              </dd>
+            </div>
+          </dl>
+        )}
       </div>
     </section>
   )

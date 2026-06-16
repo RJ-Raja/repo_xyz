@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { API_BASE_URL } from '../constants/app'
-import { STORAGE_KEYS } from '../utils/storage'
+import { tokenStorage } from '../utils/tokenStorage'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +11,7 @@ const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+  const token = tokenStorage.getToken()
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

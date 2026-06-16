@@ -6,11 +6,10 @@ import ErrorMessage from '../components/common/ErrorMessage'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import { ROUTES } from '../constants/routes'
-import { useAuth } from '../hooks/useAuth'
+import { authService } from '../services/authService'
 
 const Register = () => {
   const [error, setError] = useState('')
-  const { login } = useAuth()
   const navigate = useNavigate()
   const {
     formState: { errors, isSubmitting },
@@ -22,11 +21,13 @@ const Register = () => {
     setError('')
 
     try {
-      login({ email: values.email, name: values.name }, 'demo-token')
-      toast.success('Account created')
-      navigate(ROUTES.DASHBOARD)
-    } catch {
-      setError('Unable to create your account. Please try again.')
+      const response = await authService.register(values)
+      toast.success(response.message || 'OTP sent to email')
+      navigate(ROUTES.VERIFY_REGISTER_OTP, { state: { email: response.email || values.email } })
+    } catch (err) {
+      const message = err.response?.data?.message || 'Unable to create your account. Please try again.'
+      setError(message)
+      toast.error(message)
     }
   }
 
